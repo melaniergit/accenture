@@ -1,4 +1,4 @@
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.views import generic
@@ -24,6 +24,30 @@ class DetailView(generic.DetailView):
 class ResultsView(generic.DetailView):
     model = Question
     template_name = 'polls/results.html'
+
+
+def polls_list(request):
+    max_objects = 20
+    polls = Question.objects.all()[:max_objects]
+    data = {"results": list(polls.values("id", "question_text", "pub_date"))}
+    return JsonResponse(data)
+
+
+def polls_detail(request, pk):
+    poll = get_object_or_404(Question, pk=pk)
+    data = {"results": {
+        "id": poll.id,
+        "question": poll.question_text,
+        "pub_date": poll.pub_date
+    }}
+    return JsonResponse(data)
+
+
+def choices_list(request, pk):
+    max_objects = 20
+    choices = Choice.objects.filter(question_id=pk)[:max_objects]
+    data = {"results": list(choices.values("question_id", "id", "choice_text", "votes"))}
+    return JsonResponse(data)
 
 
 def vote(request, question_id):
